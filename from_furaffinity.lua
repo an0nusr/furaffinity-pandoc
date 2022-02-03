@@ -22,6 +22,8 @@ local header_end = P"[/h" * R"17" * "]"
 
 local cmds = (P"sup" + P"sub" + (P"h" * R"17") + P"quote" 
   + (P"url" * (P"=" * (1 - P"]" - whitespacechar)^1)^0) 
+  + P"left" + P"right" + P"center"
+  + (P"color" * (P"=" * (1 - P"]")^1)^0) 
   + P"b" + P"i" + P"u" + P"s")
 
 -- Note - inspiration on tags was taken from here: https://gist.github.com/soulik/f9ef4b4dd2dadf066b07
@@ -43,12 +45,17 @@ function urlHelper(t)
   return pandoc.Link(text, url)
 end
 
+--function handleUnsupported(t)
+--  print("Warning: Unsupported tag " .. t)
+--end
+
 -- Grammar
 G = P{ "Pandoc",
   Pandoc = Ct(V"Block"^0) / pandoc.Pandoc;
   Block = blanklines^0 * (V"Header" + V"BlockQuote" + V"Para") ;
   Para = Ct(V"Inline"^1) / pandoc.Para;
   Inline = V"Emph" + V"Strong" + V"Underline" + V"Strike" + V"Super" + V"Sub" + V"Url"
+    + V"UnsupportedTags"
     + V"Str" + V"Space" + V"SoftBreak";
   Str = (1 - whitespacechar - V"cmd")^1 / pandoc.Str;
   Space = spacechar^1 / pandoc.Space;
@@ -68,6 +75,11 @@ G = P{ "Pandoc",
   Super = P"[sup]" * Ct(V"Inline"^1) * P"[/sup]" / pandoc.Superscript;
   Sub = P"[sub]" * Ct(V"Inline"^1) * P"[/sub]" / pandoc.Subscript;
   Url = Ct(P"[url" * C((P"=" * (1 - whitespacechar - "]")^1)^0) * P"]" * C(V"Inline"^1) * P"[/url]") / urlHelper;
+
+  -- unsupported tags (these will be ignored)
+  UnsupportedTags = (V"Align" + V"Color");
+  Align = P"[" * P"/"^0 * (P"left" + P"right" + P"center") * P"]";
+  Color = P"[" * P"/"^0 * P"color" * (P"=" * (1 - P"]")^1)^0 * P"]";
   
 }
 
