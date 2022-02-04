@@ -32,14 +32,13 @@ local cmds = (P"sup" + P"sub" + (P"h" * R"17") + P"quote"
 -- And here: https://tug.org/tug2019/slides/slides-menke.pdf (comparison between peg and lpeg)
 
 function urlHelper(t)
-  local url = ""
-  local text = ""
-  if t[1]:match('^=') then 
-    url = string.sub(t[1], 2)
-    text = t[2]
+  local url = t[1]
+  local text = t[2]
+
+  if url == "" or url == nil then
+    url = text
   else 
-    url = t[1]
-    text = t[1]
+    url = string.sub(url, 2)
   end
 
   return pandoc.Link(text, url)
